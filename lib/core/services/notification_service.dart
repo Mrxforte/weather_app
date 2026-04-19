@@ -81,7 +81,7 @@ class NotificationService {
       frequency: const Duration(hours: 24),
       initialDelay: _timeUntilNextMorning(),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.replace,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     );
   }
 

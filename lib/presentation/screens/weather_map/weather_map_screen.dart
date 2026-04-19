@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/weather_utils.dart';
+import '../../providers/settings_provider.dart';
 import '../../providers/weather_provider.dart';
-import '../../widgets/weather_background.dart';
 
-// Interactive weather map showing precipitation, temperature and cloud layers
 class WeatherMapScreen extends StatefulWidget {
   const WeatherMapScreen({super.key});
 
@@ -16,152 +19,281 @@ class WeatherMapScreen extends StatefulWidget {
 }
 
 class _WeatherMapScreenState extends State<WeatherMapScreen> {
-  String _selectedLayer = 'precipitation_new';
+  late final MapController _mapController;
+  String _selectedLayer = 'none';
 
-  Map<String, String> _layers(BuildContext context) {
+  static const _layerKeys = [
+    'none',
+    'precipitation',
+    'temperature',
+    'clouds',
+    'wind',
+  ];
+
+  Map<String, String> _layerLabels(BuildContext context) {
     final l10n = S.of(context)!;
     return {
-      'precipitation_new': l10n.precipitation,
-      'temp_new': l10n.temperature,
-      'clouds_new': l10n.clouds,
-      'wind_new': l10n.wind,
-      'pressure_new': l10n.pressure,
+      'none': 'Base',
+      'precipitation': l10n.precipitation,
+      'temperature': l10n.temperature,
+      'clouds': l10n.clouds,
+      'wind': l10n.wind,
     };
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final weather = context.watch<WeatherProvider>();
+    final settings = context.watch<SettingsProvider>();
     final current = weather.currentWeather;
 
-    return WeatherBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          title: Text(
-            S.of(context)!.weatherMap,
-            style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.pop(),
-          ),
+    final center = current != null
+        ? LatLng(current.lat, current.lon)
+        : const LatLng(41.0, 69.0);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(S.of(context)!.weatherMap),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => context.pop(),
         ),
-        body: Column(
-          children: [
-            // Layer selection chips
-            SizedBox(
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: _layers(context).entries.map((entry) {
-                  final isSelected = _selectedLayer == entry.key;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(entry.value),
-                      selected: isSelected,
-                      onSelected: (_) =>
-                          setState(() => _selectedLayer = entry.key),
-                      selectedColor: Colors.white.withValues(alpha: 0.3),
-                      backgroundColor: Colors.white.withValues(alpha: 0.1),
-                      labelStyle: AppTextStyles.bodySmall.copyWith(
-                        color: isSelected ? Colors.white : Colors.white70,
-                      ),
-                      side: BorderSide(
-                        color: isSelected ? Colors.white54 : Colors.white24,
+        actions: [
+          if (current != null)
+            IconButton(
+              icon: const Icon(Icons.my_location_rounded),
+              onPressed: () => _mapController.move(center, 10),
+              tooltip: 'Center on city',
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Interactive map
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: center,
+              initialZoom: 8,
+              minZoom: 3,
+              maxZoom: 16,
+            ),
+            children: [
+              // Base OSM tile layer
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.weather_app',
+              ),
+
+              // Weather marker
+              if (current != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: center,
+                      width: 150,
+                      height: 70,
+                      child: _WeatherMarker(
+                        temp: WeatherUtils.formatTemperature(
+                          current.temp,
+                          isFahrenheit: settings.isFahrenheit,
+                        ),
+                        condition: current.conditionMain,
+                        icon: WeatherUtils.getWeatherIcon(
+                          current.conditionCode,
+                        ),
                       ),
                     ),
+                  ],
+                ),
+            ],
+          ).animate().fadeIn(duration: 400.ms),
+
+          // Layer chips at top
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 44,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _layerKeys.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final key = _layerKeys[index];
+                  final isSelected = _selectedLayer == key;
+                  return ChoiceChip(
+                    label: Text(_layerLabels(context)[key] ?? key),
+                    selected: isSelected,
+                    onSelected: (_) => setState(() => _selectedLayer = key),
+                    selectedColor: AppColors.primary.withValues(alpha: 0.9),
+                    backgroundColor: Colors.white.withValues(alpha: 0.85),
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    side: BorderSide(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.grey.shade300,
+                    ),
                   );
-                }).toList(),
+                },
               ),
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.2),
+          ),
 
-            const SizedBox(height: 8),
-
-            // Map tile display area
-            Expanded(
-              child:
-                  Container(
-                        margin: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.white.withValues(alpha: 0.08),
-                          border: Border.all(color: Colors.white12),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Stack(
-                            children: [
-                              // Weather tile overlay (uses OWM tile API)
-                              Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.map_rounded,
-                                      size: 80,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      current != null
-                                          ? '${current.cityName} — ${_layers(context)[_selectedLayer]}'
-                                          : 'Weather Map',
-                                      style: AppTextStyles.titleMedium.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      current != null
-                                          ? 'Lat: ${current.lat.toStringAsFixed(2)}, Lon: ${current.lon.toStringAsFixed(2)}'
-                                          : '',
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: Colors.white38,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    // Note about map integration
-                                    Container(
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 32,
-                                      ),
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.white.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'Map tile layer: $_selectedLayer\n'
-                                        'Tile URL: tile.openweathermap.org/map/$_selectedLayer/{z}/{x}/{y}.png',
-                                        textAlign: TextAlign.center,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white38,
-                                          fontFamily: 'monospace',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+          // Weather info card at bottom
+          if (current != null)
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      WeatherUtils.getWeatherIcon(current.conditionCode),
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            current.cityName,
+                            style: AppTextStyles.titleMedium,
                           ),
+                          Text(
+                            '${WeatherUtils.formatTemperature(current.temp, isFahrenheit: settings.isFahrenheit)} · ${current.conditionMain}',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.water_drop_rounded,
+                              size: 14,
+                              color: Colors.blue,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${current.humidity}%',
+                              style: AppTextStyles.bodySmall,
+                            ),
+                          ],
                         ),
-                      )
-                      .animate()
-                      .fadeIn(delay: 100.ms, duration: 500.ms)
-                      .scale(begin: const Offset(0.95, 0.95)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.air_rounded,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              WeatherUtils.formatWindSpeed(
+                                current.windSpeed,
+                                isMph: settings.isMph,
+                              ),
+                              style: AppTextStyles.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.15),
             ),
-          ],
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeatherMarker extends StatelessWidget {
+  final String temp;
+  final String condition;
+  final IconData icon;
+
+  const _WeatherMarker({
+    required this.temp,
+    required this.condition,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            temp,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }

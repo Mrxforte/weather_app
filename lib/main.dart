@@ -56,6 +56,7 @@ class WeatherApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
           return MaterialApp.router(
+            key: ValueKey(settings.locale),
             title: 'WeatherNow',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,

@@ -4,10 +4,11 @@ import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../providers/settings_provider.dart';
 import '../../providers/weather_provider.dart';
 
-// City search screen with debounced search and results list
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -22,7 +23,6 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus the search field when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -49,49 +49,39 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final weather = context.watch<WeatherProvider>();
+    final settings = context.watch<SettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Search bar with back button
+            // Search bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 12, 16, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    onPressed: () {
-                      weather.clearSearch();
-                      context.pop();
-                    },
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      onChanged: _onSearchChanged,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: S.of(context)!.searchHint,
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  weather.clearSearch();
-                                },
-                              )
-                            : null,
-                      ),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _focusNode,
+                onChanged: _onSearchChanged,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: S.of(context)!.searchHint,
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            _searchController.clear();
+                            weather.clearSearch();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                ),
               ),
             ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1, end: 0),
 
-            // Search results
+            // Results
             Expanded(
               child: weather.isSearching
                   ? const Center(child: CircularProgressIndicator())
@@ -122,12 +112,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemCount: weather.searchResults.length,
                       itemBuilder: (context, index) {
                         final city = weather.searchResults[index];
+                        final isFav = settings.isFavorite(city);
                         return ListTile(
-                              leading: const CircleAvatar(
-                                backgroundColor: Color(0xFFE3F2FD),
+                              leading: CircleAvatar(
+                                backgroundColor: colorScheme.primaryContainer,
                                 child: Icon(
                                   Icons.location_city_rounded,
-                                  color: Color(0xFF2196F3),
+                                  color: colorScheme.primary,
                                 ),
                               ),
                               title: Text(
@@ -140,10 +131,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                   color: Colors.grey,
                                 ),
                               ),
-                              trailing: const Icon(
-                                Icons.north_west_rounded,
-                                size: 16,
-                                color: Colors.grey,
+                              trailing: IconButton(
+                                icon: Icon(
+                                  isFav
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  color: isFav ? AppColors.accent : Colors.grey,
+                                  size: 20,
+                                ),
+                                onPressed: () => settings.toggleFavorite(city),
                               ),
                               onTap: () => _onCitySelected(
                                 city.lat,

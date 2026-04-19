@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -12,9 +13,15 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/weather_background.dart';
 import '../../widgets/weather_info_tile.dart';
 
-// Detailed weather view with all available data points
-class WeatherDetailScreen extends StatelessWidget {
+class WeatherDetailScreen extends StatefulWidget {
   const WeatherDetailScreen({super.key});
+
+  @override
+  State<WeatherDetailScreen> createState() => _WeatherDetailScreenState();
+}
+
+class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
+  bool _simpleView = false;
 
   @override
   Widget build(BuildContext context) {
@@ -51,167 +58,238 @@ class WeatherDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                _simpleView
+                    ? Icons.grid_view_rounded
+                    : Icons.view_agenda_rounded,
+                color: Colors.white,
+              ),
+              onPressed: () => setState(() => _simpleView = !_simpleView),
+              tooltip: _simpleView ? 'Detail view' : 'Simple view',
+            ),
+          ],
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 40),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
+        body: RefreshIndicator(
+          onRefresh: () => weather.refresh(),
+          color: Colors.white,
+          backgroundColor: Colors.white24,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: const EdgeInsets.only(bottom: 40),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
 
-              // Sun times
-              GlassCard(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _SunTimeWidget(
-                      icon: Icons.wb_sunny_rounded,
-                      label: S.of(context)!.sunrise,
-                      time: AppDateUtils.formatTime(
-                        AppDateUtils.fromUnixTimestamp(current.sunrise),
+                // Sun times
+                GlassCard(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _SunTimeWidget(
+                        icon: Icons.wb_sunny_rounded,
+                        label: S.of(context)!.sunrise,
+                        time: AppDateUtils.formatTime(
+                          AppDateUtils.fromUnixTimestamp(current.sunrise),
+                        ),
                       ),
-                    ),
-                    Container(width: 1, height: 50, color: Colors.white12),
-                    _SunTimeWidget(
-                      icon: Icons.nights_stay_rounded,
-                      label: S.of(context)!.sunset,
-                      time: AppDateUtils.formatTime(
-                        AppDateUtils.fromUnixTimestamp(current.sunset),
+                      Container(width: 1, height: 50, color: Colors.white12),
+                      _SunTimeWidget(
+                        icon: Icons.nights_stay_rounded,
+                        label: S.of(context)!.sunset,
+                        time: AppDateUtils.formatTime(
+                          AppDateUtils.fromUnixTimestamp(current.sunset),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
+                    ],
+                  ),
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
 
-              // Detailed stats grid
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      S.of(context)!.details,
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: Colors.white,
-                      ),
+                if (_simpleView) ...[
+                  // Simple view — just key metrics
+                  GlassCard(
+                        child: Column(
+                          children: [
+                            _SimpleRow(
+                              label: S.of(context)!.temperature,
+                              value: WeatherUtils.formatTemperature(
+                                current.temp,
+                                isFahrenheit: settings.isFahrenheit,
+                              ),
+                            ),
+                            _SimpleRow(
+                              label: S.of(context)!.feelsLike,
+                              value: WeatherUtils.formatTemperature(
+                                current.feelsLike,
+                                isFahrenheit: settings.isFahrenheit,
+                              ),
+                            ),
+                            _SimpleRow(
+                              label: S.of(context)!.humidity,
+                              value: '${current.humidity}%',
+                            ),
+                            _SimpleRow(
+                              label: S.of(context)!.wind,
+                              value: WeatherUtils.formatWindSpeed(
+                                current.windSpeed,
+                                isMph: settings.isMph,
+                              ),
+                            ),
+                            _SimpleRow(
+                              label: S.of(context)!.pressure,
+                              value: '${current.pressure} hPa',
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(delay: 100.ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.05),
+                ] else ...[
+                  // Detail view — full grid
+                  GlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              S.of(context)!.details,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            GridView.count(
+                              crossAxisCount: 3,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              childAspectRatio: 1.1,
+                              children: [
+                                WeatherInfoTile(
+                                  icon: Icons.thermostat_rounded,
+                                  label: 'Feels Like',
+                                  value: WeatherUtils.formatTemperature(
+                                    current.feelsLike,
+                                    isFahrenheit: settings.isFahrenheit,
+                                  ),
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.water_drop_rounded,
+                                  label: 'Humidity',
+                                  value: '${current.humidity}%',
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.compress_rounded,
+                                  label: 'Pressure',
+                                  value: '${current.pressure} hPa',
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.air_rounded,
+                                  label: 'Wind',
+                                  value: WeatherUtils.formatWindSpeed(
+                                    current.windSpeed,
+                                    isMph: settings.isMph,
+                                  ),
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.explore_rounded,
+                                  label: 'Direction',
+                                  value: WeatherUtils.windDirectionFromDegrees(
+                                    current.windDeg,
+                                  ),
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.visibility_rounded,
+                                  label: 'Visibility',
+                                  value: WeatherUtils.formatVisibility(
+                                    current.visibility,
+                                  ),
+                                ),
+                                WeatherInfoTile(
+                                  icon: Icons.cloud_rounded,
+                                  label: 'Clouds',
+                                  value: '${current.clouds}%',
+                                ),
+                                if (current.windGust != null)
+                                  WeatherInfoTile(
+                                    icon: Icons.storm_rounded,
+                                    label: 'Gusts',
+                                    value: WeatherUtils.formatWindSpeed(
+                                      current.windGust!,
+                                      isMph: settings.isMph,
+                                    ),
+                                  ),
+                                WeatherInfoTile(
+                                  icon: Icons.thermostat_auto_rounded,
+                                  label: 'High / Low',
+                                  value:
+                                      '${WeatherUtils.formatTemperature(current.tempMax, isFahrenheit: settings.isFahrenheit)} / ${WeatherUtils.formatTemperature(current.tempMin, isFahrenheit: settings.isFahrenheit)}',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(delay: 100.ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.05),
+
+                  // Humidity/pressure chart if forecast data exists
+                  if (weather.forecast != null &&
+                      weather.forecast!.forecasts.length >= 4)
+                    _HumidityPressureChart(
+                      forecasts: weather.forecast!.forecasts.take(8).toList(),
                     ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      crossAxisCount: 3,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.1,
-                      children: [
-                        WeatherInfoTile(
-                          icon: Icons.thermostat_rounded,
-                          label: 'Feels Like',
-                          value: WeatherUtils.formatTemperature(
-                            current.feelsLike,
-                            isFahrenheit: settings.isFahrenheit,
+                ],
+
+                // Description
+                GlassCard(
+                      child: Row(
+                        children: [
+                          Icon(
+                            WeatherUtils.getWeatherIcon(
+                              current.conditionCode,
+                              isNight: isNight,
+                            ),
+                            size: 40,
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.water_drop_rounded,
-                          label: 'Humidity',
-                          value: '${current.humidity}%',
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.compress_rounded,
-                          label: 'Pressure',
-                          value: '${current.pressure} hPa',
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.air_rounded,
-                          label: 'Wind',
-                          value: WeatherUtils.formatWindSpeed(
-                            current.windSpeed,
-                            isMph: settings.isMph,
-                          ),
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.explore_rounded,
-                          label: 'Direction',
-                          value: WeatherUtils.windDirectionFromDegrees(
-                            current.windDeg,
-                          ),
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.visibility_rounded,
-                          label: 'Visibility',
-                          value: WeatherUtils.formatVisibility(
-                            current.visibility,
-                          ),
-                        ),
-                        WeatherInfoTile(
-                          icon: Icons.cloud_rounded,
-                          label: 'Clouds',
-                          value: '${current.clouds}%',
-                        ),
-                        if (current.windGust != null)
-                          WeatherInfoTile(
-                            icon: Icons.storm_rounded,
-                            label: 'Gusts',
-                            value: WeatherUtils.formatWindSpeed(
-                              current.windGust!,
-                              isMph: settings.isMph,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  current.conditionMain,
+                                  style: AppTextStyles.titleMedium.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  current.conditionDescription
+                                      .split(' ')
+                                      .map(
+                                        (w) =>
+                                            w[0].toUpperCase() + w.substring(1),
+                                      )
+                                      .join(' '),
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        WeatherInfoTile(
-                          icon: Icons.thermostat_auto_rounded,
-                          label: 'High / Low',
-                          value:
-                              '${WeatherUtils.formatTemperature(current.tempMax, isFahrenheit: settings.isFahrenheit)} / ${WeatherUtils.formatTemperature(current.tempMin, isFahrenheit: settings.isFahrenheit)}',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05),
-
-              // Description
-              GlassCard(
-                    child: Row(
-                      children: [
-                        Icon(
-                          WeatherUtils.getWeatherIcon(
-                            current.conditionCode,
-                            isNight: isNight,
-                          ),
-                          size: 40,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                current.conditionMain,
-                                style: AppTextStyles.titleMedium.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                current.conditionDescription
-                                    .split(' ')
-                                    .map(
-                                      (w) =>
-                                          w[0].toUpperCase() + w.substring(1),
-                                    )
-                                    .join(' '),
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: Colors.white60,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate(delay: 200.ms)
-                  .fadeIn(duration: 400.ms)
-                  .slideY(begin: 0.05),
-            ],
+                        ],
+                      ),
+                    )
+                    .animate(delay: 200.ms)
+                    .fadeIn(duration: 400.ms)
+                    .slideY(begin: 0.05),
+              ],
+            ),
           ),
         ),
       ),
@@ -246,5 +324,91 @@ class _SunTimeWidget extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _SimpleRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SimpleRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HumidityPressureChart extends StatelessWidget {
+  final List<dynamic> forecasts;
+
+  const _HumidityPressureChart({required this.forecasts});
+
+  @override
+  Widget build(BuildContext context) {
+    final humiditySpots = <FlSpot>[];
+    for (var i = 0; i < forecasts.length; i++) {
+      humiditySpots.add(FlSpot(i.toDouble(), forecasts[i].humidity.toDouble()));
+    }
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context)!.humidity,
+            style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                minY: 0,
+                maxY: 100,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: humiditySpots,
+                    isCurved: true,
+                    color: Colors.lightBlueAccent,
+                    barWidth: 2,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.lightBlueAccent.withValues(alpha: 0.3),
+                          Colors.lightBlueAccent.withValues(alpha: 0.02),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate(delay: 150.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05);
   }
 }

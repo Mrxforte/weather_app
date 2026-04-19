@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_utils.dart';
@@ -11,9 +11,15 @@ import '../../providers/weather_provider.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/weather_background.dart';
 
-// Full 5-day forecast with expandable daily sections
-class ForecastScreen extends StatelessWidget {
+class ForecastScreen extends StatefulWidget {
   const ForecastScreen({super.key});
+
+  @override
+  State<ForecastScreen> createState() => _ForecastScreenState();
+}
+
+class _ForecastScreenState extends State<ForecastScreen> {
+  bool _showChart = true;
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +28,26 @@ class ForecastScreen extends StatelessWidget {
     final forecast = weather.forecast;
 
     if (forecast == null) {
-      return const Scaffold(
-        body: Center(child: Text('No forecast data available')),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.cloud_off_rounded,
+                size: 64,
+                color: Colors.grey.shade300,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                S.of(context)!.noWeatherData,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: Colors.grey.shade400,
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -47,144 +71,306 @@ class ForecastScreen extends StatelessWidget {
       colors: gradient,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          title: Text(
-            S.of(context)!.forecast,
-            style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
-            onPressed: () => context.pop(),
-          ),
-        ),
-        body: ListView.builder(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(top: 8, bottom: 40),
-          itemCount: dailyMap.length,
-          itemBuilder: (context, index) {
-            final entry = dailyMap.entries.elementAt(index);
-            final date = DateTime.parse(entry.key);
-            final dayForecasts = entry.value;
-            final isToday =
-                DateTime.now().day == date.day &&
-                DateTime.now().month == date.month;
+        body: RefreshIndicator(
+          onRefresh: () => weather.refresh(),
+          color: Colors.white,
+          backgroundColor: Colors.white24,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              SliverAppBar(
+                floating: true,
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                automaticallyImplyLeading: false,
+                title: Text(
+                  S.of(context)!.forecast,
+                  style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
+                ),
+                actions: [
+                  // Toggle chart / list view
+                  IconButton(
+                    icon: Icon(
+                      _showChart
+                          ? Icons.view_list_rounded
+                          : Icons.show_chart_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => setState(() => _showChart = !_showChart),
+                    tooltip: _showChart ? 'List view' : 'Chart view',
+                  ),
+                ],
+              ),
 
-            // Compute day highs and lows
-            double hi = double.negativeInfinity;
-            double lo = double.infinity;
-            for (final f in dayForecasts) {
-              if (f.tempMax > hi) hi = f.tempMax;
-              if (f.tempMin < lo) lo = f.tempMin;
-            }
+              // Temperature chart
+              if (_showChart && forecast.forecasts.length >= 4)
+                SliverToBoxAdapter(
+                  child: _TemperatureChart(
+                    forecasts: forecast.forecasts.take(12).toList(),
+                    isFahrenheit: settings.isFahrenheit,
+                  ),
+                ),
 
-            return GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Day header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            isToday
-                                ? S.of(context)!.today
-                                : AppDateUtils.formatDate(date),
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            '${WeatherUtils.formatTemperature(hi, isFahrenheit: settings.isFahrenheit)} / ${WeatherUtils.formatTemperature(lo, isFahrenheit: settings.isFahrenheit)}',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
+              // Daily sections
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final entry = dailyMap.entries.elementAt(index);
+                  final date = DateTime.parse(entry.key);
+                  final dayForecasts = entry.value;
+                  final isToday =
+                      DateTime.now().day == date.day &&
+                      DateTime.now().month == date.month;
 
-                      const SizedBox(height: 12),
-                      const Divider(color: Colors.white12, height: 1),
-                      const SizedBox(height: 8),
+                  double hi = double.negativeInfinity;
+                  double lo = double.infinity;
+                  for (final f in dayForecasts) {
+                    if (f.tempMax > hi) hi = f.tempMax;
+                    if (f.tempMin < lo) lo = f.tempMin;
+                  }
 
-                      // Hourly breakdown for the day
-                      ...dayForecasts.map((f) {
-                        final time = AppDateUtils.formatTime(
-                          AppDateUtils.fromUnixTimestamp(f.timestamp),
-                        );
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 64,
-                                child: Text(
-                                  time,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: Colors.white60,
+                  return GlassCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  isToday
+                                      ? S.of(context)!.today
+                                      : AppDateUtils.formatDate(date),
+                                  style: AppTextStyles.titleMedium.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
-                              Icon(
-                                WeatherUtils.getWeatherIcon(f.conditionCode),
-                                size: 20,
-                                color: Colors.white70,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  f.conditionMain,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: Colors.white60,
+                                Text(
+                                  '${WeatherUtils.formatTemperature(hi, isFahrenheit: settings.isFahrenheit)} / ${WeatherUtils.formatTemperature(lo, isFahrenheit: settings.isFahrenheit)}',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white70,
                                   ),
                                 ),
-                              ),
-                              if (f.pop != null && f.pop! > 0)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.water_drop_rounded,
-                                        size: 12,
-                                        color: Colors.lightBlueAccent,
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.white12, height: 1),
+                            const SizedBox(height: 8),
+                            ...dayForecasts.map((f) {
+                              final time = AppDateUtils.formatTime(
+                                AppDateUtils.fromUnixTimestamp(f.timestamp),
+                              );
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 64,
+                                      child: Text(
+                                        time,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: Colors.white60,
+                                        ),
                                       ),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        '${(f.pop! * 100).round()}%',
-                                        style: AppTextStyles.labelSmall
-                                            .copyWith(
+                                    ),
+                                    Icon(
+                                      WeatherUtils.getWeatherIcon(
+                                        f.conditionCode,
+                                      ),
+                                      size: 20,
+                                      color: Colors.white70,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        f.conditionMain,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: Colors.white60,
+                                        ),
+                                      ),
+                                    ),
+                                    if (f.pop != null && f.pop! > 0)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.water_drop_rounded,
+                                              size: 12,
                                               color: Colors.lightBlueAccent,
                                             ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${(f.pop! * 100).round()}%',
+                                              style: AppTextStyles.labelSmall
+                                                  .copyWith(
+                                                    color:
+                                                        Colors.lightBlueAccent,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
-                                  ),
+                                    Text(
+                                      WeatherUtils.formatTemperature(
+                                        f.temp,
+                                        isFahrenheit: settings.isFahrenheit,
+                                      ),
+                                      style: AppTextStyles.titleMedium.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              Text(
-                                WeatherUtils.formatTemperature(
-                                  f.temp,
-                                  isFahrenheit: settings.isFahrenheit,
-                                ),
-                                style: AppTextStyles.titleMedium.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                )
-                .animate(delay: (index * 100).ms)
-                .fadeIn(duration: 400.ms)
-                .slideY(begin: 0.05, end: 0);
-          },
+                              );
+                            }),
+                          ],
+                        ),
+                      )
+                      .animate(delay: (index * 100).ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.05, end: 0);
+                }, childCount: dailyMap.length),
+              ),
+
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            ],
+          ),
         ),
       ),
     );
+  }
+}
+
+/// Temperature trend line chart for the next 12 hours
+class _TemperatureChart extends StatelessWidget {
+  final List<dynamic> forecasts;
+  final bool isFahrenheit;
+
+  const _TemperatureChart({
+    required this.forecasts,
+    required this.isFahrenheit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final spots = <FlSpot>[];
+    for (var i = 0; i < forecasts.length; i++) {
+      final temp = isFahrenheit
+          ? WeatherUtils.celsiusToFahrenheit(forecasts[i].temp)
+          : forecasts[i].temp;
+      spots.add(FlSpot(i.toDouble(), temp));
+    }
+
+    final minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b) - 3;
+    final maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) + 3;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context)!.temperature,
+            style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 160,
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 2,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= forecasts.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final dt = AppDateUtils.fromUnixTimestamp(
+                          forecasts[idx].timestamp,
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            AppDateUtils.formatTime(dt),
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: Colors.white38,
+                              fontSize: 9,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minY: minY,
+                maxY: maxY,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: Colors.white,
+                    barWidth: 2.5,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 3,
+                            color: Colors.white,
+                            strokeWidth: 0,
+                          ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.25),
+                          Colors.white.withValues(alpha: 0.02),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (spots) => spots
+                        .map(
+                          (s) => LineTooltipItem(
+                            '${s.y.round()}°',
+                            AppTextStyles.bodySmall.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05);
   }
 }
