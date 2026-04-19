@@ -24,7 +24,10 @@ class DailyForecastCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Group by day and take one entry per day
     final dailyMap = forecastList.groupedByDay;
-    final days = dailyMap.entries.take(5).toList();
+    final days = dailyMap.entries.take(7).toList();
+    final title = days.length >= 7
+        ? S.of(context)!.forecast
+        : '${days.length}-Day Forecast';
 
     return GlassCard(
       onTap: onTap,
@@ -36,7 +39,7 @@ class DailyForecastCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                S.of(context)!.forecast,
+                title,
                 style: AppTextStyles.labelSmall.copyWith(color: Colors.white60),
               ),
               Icon(

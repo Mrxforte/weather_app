@@ -4,8 +4,9 @@ import '../../core/theme/app_text_styles.dart';
 // Reusable section header used in settings and list screens
 class SectionHeader extends StatelessWidget {
   final String title;
+  final Color? color;
 
-  const SectionHeader({super.key, required this.title});
+  const SectionHeader({super.key, required this.title, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +15,7 @@ class SectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: AppTextStyles.labelSmall.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+          color: color ?? Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
         ),

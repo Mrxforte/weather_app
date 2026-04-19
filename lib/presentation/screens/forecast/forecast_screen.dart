@@ -29,13 +29,13 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final forecast = weather.forecast;
     if (forecast == null) return;
 
-    final dailyMap = forecast.groupedByDay;
-    final lines = <String>[
-      '${forecast.cityName}, ${forecast.country}',
-      S.of(context)!.forecast,
-    ];
+    final dailyEntries = forecast.groupedByDay.entries.take(7).toList();
+    final title = dailyEntries.length >= 7
+        ? S.of(context)!.forecast
+        : '${dailyEntries.length}-Day Forecast';
+    final lines = <String>['${forecast.cityName}, ${forecast.country}', title];
 
-    for (final entry in dailyMap.entries.take(7)) {
+    for (final entry in dailyEntries) {
       final date = DateTime.parse(entry.key);
       final dayForecasts = entry.value;
       double hi = double.negativeInfinity;
@@ -99,7 +99,10 @@ class _ForecastScreenState extends State<ForecastScreen> {
           )
         : null;
 
-    final dailyMap = forecast.groupedByDay;
+    final dailyEntries = forecast.groupedByDay.entries.take(7).toList();
+    final forecastTitle = dailyEntries.length >= 7
+        ? S.of(context)!.forecast
+        : '${dailyEntries.length}-Day Forecast';
 
     return WeatherBackground(
       colors: gradient,
@@ -120,7 +123,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 foregroundColor: Colors.white,
                 automaticallyImplyLeading: false,
                 title: Text(
-                  S.of(context)!.forecast,
+                  forecastTitle,
                   style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -189,7 +192,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
               // Daily sections
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  final entry = dailyMap.entries.elementAt(index);
+                  final entry = dailyEntries[index];
                   final date = DateTime.parse(entry.key);
                   final dayForecasts = entry.value;
                   final isToday =
@@ -330,7 +333,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
                       .animate(delay: (index * 100).ms)
                       .fadeIn(duration: 400.ms)
                       .slideY(begin: 0.05, end: 0);
-                }, childCount: dailyMap.length),
+                }, childCount: dailyEntries.length),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 20)),

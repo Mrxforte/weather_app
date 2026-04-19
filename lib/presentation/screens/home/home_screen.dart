@@ -27,6 +27,7 @@ class HomeScreen extends StatelessWidget {
     final weather = context.watch<WeatherProvider>();
     final settings = context.watch<SettingsProvider>();
     final current = weather.currentWeather;
+    final heroHeight = MediaQuery.sizeOf(context).height * 0.30;
 
     final isNight = current != null
         ? AppDateUtils.isNight(
@@ -109,19 +110,15 @@ class HomeScreen extends StatelessWidget {
                 ),
 
                 if (current != null) ...[
-                  SliverToBoxAdapter(
-                    child: _SelectedCityForecastStrip(
-                      weather: current,
-                      isFahrenheit: settings.isFahrenheit,
-                    ),
-                  ),
-
                   // Big temperature display
                   SliverToBoxAdapter(
-                    child: _CurrentWeatherHeader(
-                      weather: current,
-                      isFahrenheit: settings.isFahrenheit,
-                      isNight: isNight,
+                    child: SizedBox(
+                      height: heroHeight,
+                      child: _CurrentWeatherHeader(
+                        weather: current,
+                        isFahrenheit: settings.isFahrenheit,
+                        isNight: isNight,
+                      ),
                     ),
                   ),
 
@@ -177,6 +174,8 @@ class HomeScreen extends StatelessWidget {
 
     return WeatherBackground(
       colors: gradient,
+      conditionCode: current?.conditionCode,
+      isNight: isNight,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
@@ -206,45 +205,6 @@ String _cityImageUrl(String cityName) {
   return 'https://source.unsplash.com/1600x2400/?$q';
 }
 
-class _SelectedCityForecastStrip extends StatelessWidget {
-  final dynamic weather;
-  final bool isFahrenheit;
-
-  const _SelectedCityForecastStrip({
-    required this.weather,
-    required this.isFahrenheit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 2),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          const Icon(Icons.my_location_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${weather.cityName}, ${weather.country}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-            ),
-          ),
-          Text(
-            '${S.of(context)!.highLow}: ${WeatherUtils.formatTemperature(weather.tempMax, isFahrenheit: isFahrenheit)} / ${WeatherUtils.formatTemperature(weather.tempMin, isFahrenheit: isFahrenheit)}',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: Colors.white70,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0);
-  }
-}
-
 class _CurrentWeatherHeader extends StatelessWidget {
   final dynamic weather;
   final bool isFahrenheit;
@@ -259,7 +219,7 @@ class _CurrentWeatherHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -268,66 +228,96 @@ class _CurrentWeatherHeader extends StatelessWidget {
               const Icon(
                 Icons.location_on_rounded,
                 color: Colors.white70,
-                size: 18,
+                size: 20,
               ),
               const SizedBox(width: 4),
-              Text(
-                '${weather.cityName}, ${weather.country}',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
+              Expanded(
+                child: Text(
+                  '${weather.cityName}, ${weather.country}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
-          ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.1, end: 0),
-          const SizedBox(height: 12),
+          ).animate().fadeIn(duration: 450.ms).slideX(begin: -0.08, end: 0),
+          const SizedBox(height: 6),
           Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    WeatherUtils.formatTemperature(
-                      weather.temp,
-                      isFahrenheit: isFahrenheit,
-                    ),
-                    style: AppTextStyles.displayLarge.copyWith(
-                      color: Colors.white,
-                      fontSize: 96,
-                      height: 1.0,
+                  Expanded(
+                    child: Text(
+                      WeatherUtils.formatTemperature(
+                        weather.temp,
+                        isFahrenheit: isFahrenheit,
+                      ),
+                      style: AppTextStyles.displayLarge.copyWith(
+                        color: Colors.white,
+                        fontSize: 94,
+                        height: 0.95,
+                        letterSpacing: -1.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Icon(
-                      WeatherUtils.getWeatherIcon(
-                        weather.conditionCode,
-                        isNight: isNight,
-                      ),
-                      size: 48,
-                      color: Colors.white.withValues(alpha: 0.9),
+                  Icon(
+                    WeatherUtils.getWeatherIcon(
+                      weather.conditionCode,
+                      isNight: isNight,
                     ),
+                    size: 52,
+                    color: Colors.white,
                   ),
                 ],
               )
               .animate()
-              .fadeIn(duration: 600.ms, delay: 100.ms)
-              .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
-          const SizedBox(height: 4),
+              .fadeIn(duration: 550.ms, delay: 80.ms)
+              .scale(begin: const Offset(0.97, 0.97), end: const Offset(1, 1)),
+          const SizedBox(height: 6),
           Text(
-                '${weather.conditionMain}  •  ${S.of(context)!.feelsLike} ${WeatherUtils.formatTemperature(weather.feelsLike, isFahrenheit: isFahrenheit)}',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-              )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 200.ms)
-              .slideY(begin: 0.2, end: 0),
-          const SizedBox(height: 4),
-          Text(
-            'H: ${WeatherUtils.formatTemperature(weather.tempMax, isFahrenheit: isFahrenheit)}  L: ${WeatherUtils.formatTemperature(weather.tempMin, isFahrenheit: isFahrenheit)}',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
+            '${weather.conditionMain} • ${S.of(context)!.feelsLike} ${WeatherUtils.formatTemperature(weather.feelsLike, isFahrenheit: isFahrenheit)}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: Colors.white.withValues(alpha: 0.86),
+              fontSize: 19,
+              fontWeight: FontWeight.w600,
             ),
-          ).animate().fadeIn(duration: 500.ms, delay: 300.ms),
+          ).animate().fadeIn(duration: 450.ms, delay: 160.ms),
+          const Spacer(),
+          Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.22),
+          ).animate().fadeIn(duration: 400.ms, delay: 190.ms),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.north_rounded, size: 18, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                'High ${WeatherUtils.formatTemperature(weather.tempMax, isFahrenheit: isFahrenheit)}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.south_rounded, size: 18, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                'Low ${WeatherUtils.formatTemperature(weather.tempMin, isFahrenheit: isFahrenheit)}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ).animate().fadeIn(duration: 450.ms, delay: 220.ms),
         ],
       ),
     );

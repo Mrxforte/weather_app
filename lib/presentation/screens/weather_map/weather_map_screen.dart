@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/weather_utils.dart';
 import '../../providers/settings_provider.dart';
@@ -64,11 +63,15 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
         : const LatLng(41.0, 69.0);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         title: Text(
           S.of(context)!.weatherMap,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -144,17 +147,17 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                     label: Text(_layerLabels(context)[key] ?? key),
                     selected: isSelected,
                     onSelected: (_) => setState(() => _selectedLayer = key),
-                    selectedColor: AppColors.primary.withValues(alpha: 0.9),
-                    backgroundColor: Colors.white.withValues(alpha: 0.85),
+                    selectedColor: Colors.white.withValues(alpha: 0.24),
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.primary,
+                      color: isSelected ? Colors.white : Colors.white70,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
                     side: BorderSide(
                       color: isSelected
-                          ? AppColors.primary
-                          : Colors.grey.shade300,
+                          ? Colors.white.withValues(alpha: 0.36)
+                          : Colors.white.withValues(alpha: 0.18),
                     ),
                   );
                 },
@@ -225,7 +228,7 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                             const Icon(
                               Icons.water_drop_rounded,
                               size: 14,
-                              color: Colors.lightBlueAccent,
+                              color: Colors.white70,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -285,11 +288,12 @@ class _WeatherMarker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: Colors.white.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.18),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -306,6 +310,15 @@ class _WeatherMarker extends StatelessWidget {
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 14,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              condition,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
             ),
           ),
         ],
