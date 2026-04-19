@@ -25,7 +25,7 @@ class HourlyForecastRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -37,7 +37,7 @@ class HourlyForecastRow extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 120,
+            height: 92,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -54,7 +54,7 @@ class HourlyForecastRow extends StatelessWidget {
                 );
 
                 return Container(
-                      width: 70,
+                      width: 58,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -63,6 +63,7 @@ class HourlyForecastRow extends StatelessWidget {
                             index == 0 ? S.of(context)!.now : time,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: Colors.white70,
+                              fontSize: 11,
                             ),
                           ),
                           Icon(
@@ -71,7 +72,7 @@ class HourlyForecastRow extends StatelessWidget {
                               isNight: isNight,
                             ),
                             color: Colors.white.withValues(alpha: 0.85),
-                            size: 28,
+                            size: 22,
                           ),
                           Text(
                             WeatherUtils.formatTemperature(
@@ -80,6 +81,7 @@ class HourlyForecastRow extends StatelessWidget {
                             ),
                             style: AppTextStyles.titleMedium.copyWith(
                               color: Colors.white,
+                              fontSize: 15,
                             ),
                           ),
                           if (item.pop != null && item.pop! > 0)
@@ -87,10 +89,11 @@ class HourlyForecastRow extends StatelessWidget {
                               '${(item.pop! * 100).round()}%',
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: Colors.lightBlueAccent,
+                                fontSize: 10,
                               ),
                             )
                           else
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 10),
                         ],
                       ),
                     )

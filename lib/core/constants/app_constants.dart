@@ -10,6 +10,7 @@ class AppConstants {
   static const String keyTemperatureUnit = 'temperature_unit';
   static const String keyWindSpeedUnit = 'wind_speed_unit';
   static const String keyFavoriteCities = 'favorite_cities';
+  static const String keySearchHistory = 'search_history';
   static const String keyLastCity = 'last_city';
   static const String keyThemeMode = 'theme_mode';
   static const String keyLanguage = 'language';

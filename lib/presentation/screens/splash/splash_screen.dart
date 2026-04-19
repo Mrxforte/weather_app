@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:weather_app/l10n/generated/app_localizations.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -34,12 +36,39 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!settings.onboardingDone) {
       context.go(AppRoutes.onboarding);
     } else {
-      // Pre-load default city weather before showing home screen
+      // Try to use device GPS location, fall back to default city
+      double lat = AppConstants.defaultLat;
+      double lon = AppConstants.defaultLon;
+      String cityName = AppConstants.defaultCity;
+
+      try {
+        final permission = await Geolocator.checkPermission();
+        final canUseLocation =
+            permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse ||
+            await Geolocator.requestPermission() ==
+                LocationPermission.whileInUse;
+
+        if (canUseLocation) {
+          final position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.low,
+              timeLimit: Duration(seconds: 5),
+            ),
+          );
+          lat = position.latitude;
+          lon = position.longitude;
+          cityName = '';
+        }
+      } catch (_) {
+        // Location unavailable — use default
+      }
+
       final weather = context.read<WeatherProvider>();
       await weather.loadWeatherData(
-        AppConstants.defaultLat,
-        AppConstants.defaultLon,
-        cityName: AppConstants.defaultCity,
+        lat,
+        lon,
+        cityName: cityName.isNotEmpty ? cityName : null,
       );
       if (mounted) {
         // Check for pattern lock
@@ -94,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 .slideY(begin: 0.3, end: 0),
             const SizedBox(height: 8),
             Text(
-                  'Your weather companion',
+                  S.of(context)!.weatherCompanion,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Colors.white.withValues(alpha: 0.8),
                     letterSpacing: 1,

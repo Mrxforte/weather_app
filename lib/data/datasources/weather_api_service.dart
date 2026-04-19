@@ -6,6 +6,9 @@ import '../../core/services/cache_service.dart';
 class WeatherApiService {
   final Dio _dio;
   final CacheService? _cacheService;
+  String _lang = 'en';
+
+  void setLanguage(String lang) => _lang = lang;
 
   // Simple cache so the 3 parallel calls from the provider
   // only trigger one actual HTTP request
@@ -42,8 +45,9 @@ class WeatherApiService {
         queryParameters: {
           'key': ApiConstants.apiKey,
           'q': '$lat,$lon',
-          'days': 3,
+          'days': 7,
           'aqi': 'yes',
+          'lang': _lang,
         },
       );
 

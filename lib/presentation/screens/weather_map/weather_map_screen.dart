@@ -33,7 +33,7 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
   Map<String, String> _layerLabels(BuildContext context) {
     final l10n = S.of(context)!;
     return {
-      'none': 'Base',
+      'none': l10n.baseLayer,
       'precipitation': l10n.precipitation,
       'temperature': l10n.temperature,
       'clouds': l10n.clouds,
@@ -65,7 +65,11 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(S.of(context)!.weatherMap),
+        title: Text(
+          S.of(context)!.weatherMap,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -75,7 +79,7 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
             IconButton(
               icon: const Icon(Icons.my_location_rounded),
               onPressed: () => _mapController.move(center, 10),
-              tooltip: 'Center on city',
+              tooltip: S.of(context)!.centerOnCity,
             ),
         ],
       ),
@@ -167,13 +171,16 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
@@ -182,7 +189,7 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                     Icon(
                       WeatherUtils.getWeatherIcon(current.conditionCode),
                       size: 40,
-                      color: AppColors.primary,
+                      color: Colors.white,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -192,15 +199,19 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                         children: [
                           Text(
                             current.cityName,
-                            style: AppTextStyles.titleMedium,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             '${WeatherUtils.formatTemperature(current.temp, isFahrenheit: settings.isFahrenheit)} · ${current.conditionMain}',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: Colors.white70,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -214,12 +225,14 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                             const Icon(
                               Icons.water_drop_rounded,
                               size: 14,
-                              color: Colors.blue,
+                              color: Colors.lightBlueAccent,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${current.humidity}%',
-                              style: AppTextStyles.bodySmall,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),
@@ -230,7 +243,7 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                             const Icon(
                               Icons.air_rounded,
                               size: 14,
-                              color: Colors.grey,
+                              color: Colors.white70,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -238,7 +251,9 @@ class _WeatherMapScreenState extends State<WeatherMapScreen> {
                                 current.windSpeed,
                                 isMph: settings.isMph,
                               ),
-                              style: AppTextStyles.bodySmall,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),

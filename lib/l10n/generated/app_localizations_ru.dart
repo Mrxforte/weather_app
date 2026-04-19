@@ -30,7 +30,10 @@ class SRu extends S {
   String get about => 'О приложении';
 
   @override
-  String get forecast => 'Прогноз на 3 дня';
+  String get forecast => 'Прогноз на неделю';
+
+  @override
+  String get share => 'Поделиться';
 
   @override
   String get airQuality => 'Качество воздуха';
@@ -280,11 +283,11 @@ class SRu extends S {
       'Получайте точные обновления погоды для любого города мира в реальном времени.';
 
   @override
-  String get onboardingTitle2 => 'Прогноз на 3 дня';
+  String get onboardingTitle2 => 'Прогноз на неделю';
 
   @override
   String get onboardingDesc2 =>
-      'Планируйте наперёд с подробными почасовыми и ежедневными прогнозами до 3 дней.';
+      'Планируйте наперёд с подробными почасовыми и ежедневными прогнозами до 7 дней.';
 
   @override
   String get onboardingTitle3 => 'Сохраняйте города';
@@ -304,14 +307,14 @@ class SRu extends S {
 
   @override
   String get aboutDesc =>
-      'WeatherNow предоставляет данные о погоде в реальном времени со всего мира. Текущие условия, прогнозы на 3 дня, индексы качества воздуха и многое другое — в красивом и удобном интерфейсе.';
+      'WeatherNow предоставляет данные о погоде в реальном времени со всего мира. Текущие условия, прогнозы на 7 дней, индексы качества воздуха и многое другое — в красивом и удобном интерфейсе.';
 
   @override
   String get dataSource => 'Источник данных';
 
   @override
   String get dataSourceDesc =>
-      'Данные о погоде предоставлены WeatherAPI.com (бесплатный тариф). Включает текущие условия, почасовые прогнозы на 3 дня, данные о качестве воздуха и поиск городов.';
+      'Данные о погоде предоставлены WeatherAPI.com (бесплатный тариф). Включает текущие условия, почасовые прогнозы на 7 дней, данные о качестве воздуха и поиск городов.';
 
   @override
   String get builtWith => 'Создано с помощью';
@@ -371,4 +374,74 @@ class SRu extends S {
 
   @override
   String get coordinates => 'Координаты';
+
+  @override
+  String get undo => 'Отменить';
+
+  @override
+  String favoriteRemoved(String city) {
+    return '$city удален';
+  }
+
+  @override
+  String get listView => 'Список';
+
+  @override
+  String get chartView => 'График';
+
+  @override
+  String get compact => 'Компактно';
+
+  @override
+  String get detailView => 'Детальный режим';
+
+  @override
+  String get simpleView => 'Простой режим';
+
+  @override
+  String get baseLayer => 'Базовый';
+
+  @override
+  String get centerOnCity => 'К текущему городу';
+
+  @override
+  String get aqiGoodDescription =>
+      'Качество воздуха отличное. Отлично для прогулок.';
+
+  @override
+  String get aqiFairDescription =>
+      'Качество воздуха приемлемое. Чувствительным людям лучше быть осторожными.';
+
+  @override
+  String get aqiModerateDescription =>
+      'Умеренное качество воздуха. Сократите активность на улице.';
+
+  @override
+  String get aqiPoorDescription =>
+      'Плохое качество воздуха. Ограничьте длительное пребывание на улице.';
+
+  @override
+  String get aqiVeryPoorDescription =>
+      'Очень плохое качество воздуха. По возможности избегайте улицы.';
+
+  @override
+  String get celsiusShort => '°C';
+
+  @override
+  String get fahrenheitShort => '°F';
+
+  @override
+  String get kmhShort => 'км/ч';
+
+  @override
+  String get mphShort => 'миль/ч';
+
+  @override
+  String get weatherCompanion => 'Ваш погодный помощник';
+
+  @override
+  String get recentSearches => 'Недавние поиски';
+
+  @override
+  String get clearHistory => 'Очистить';
 }

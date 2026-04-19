@@ -47,6 +47,11 @@ class SettingsProvider extends ChangeNotifier {
   List<CityEntity> _favorites = [];
   List<CityEntity> get favorites => List.unmodifiable(_favorites);
 
+  // Search history cache (max 20)
+  List<CityEntity> _searchHistory = [];
+  List<CityEntity> get searchHistory => List.unmodifiable(_searchHistory);
+  List<CityEntity> get recentSearches => _searchHistory.take(5).toList();
+
   void _loadSettings() {
     _isFahrenheit = _prefs.getString(AppConstants.keyTemperatureUnit) == 'F';
     _isMph = _prefs.getString(AppConstants.keyWindSpeedUnit) == 'mph';
@@ -73,6 +78,13 @@ class SettingsProvider extends ChangeNotifier {
     // Load saved favorites
     final favJson = _prefs.getStringList(AppConstants.keyFavoriteCities) ?? [];
     _favorites = favJson
+        .map((s) => CityEntity.fromJson(jsonDecode(s) as Map<String, dynamic>))
+        .toList();
+
+    // Load cached search history
+    final historyJson =
+        _prefs.getStringList(AppConstants.keySearchHistory) ?? [];
+    _searchHistory = historyJson
         .map((s) => CityEntity.fromJson(jsonDecode(s) as Map<String, dynamic>))
         .toList();
   }
@@ -152,5 +164,41 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> _saveFavorites() async {
     final favJson = _favorites.map((c) => jsonEncode(c.toJson())).toList();
     await _prefs.setStringList(AppConstants.keyFavoriteCities, favJson);
+  }
+
+  Future<void> addSearchHistory(CityEntity city) async {
+    _searchHistory.remove(city);
+    _searchHistory.insert(0, city);
+    if (_searchHistory.length > 20) {
+      _searchHistory = _searchHistory.take(20).toList();
+    }
+    await _saveSearchHistory();
+    notifyListeners();
+  }
+
+  List<CityEntity> searchSuggestions(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return recentSearches;
+    return _searchHistory
+        .where(
+          (c) =>
+              c.name.toLowerCase().contains(q) ||
+              c.displayName.toLowerCase().contains(q),
+        )
+        .take(5)
+        .toList();
+  }
+
+  Future<void> clearSearchHistory() async {
+    _searchHistory = [];
+    await _prefs.remove(AppConstants.keySearchHistory);
+    notifyListeners();
+  }
+
+  Future<void> _saveSearchHistory() async {
+    final historyJson = _searchHistory
+        .map((c) => jsonEncode(c.toJson()))
+        .toList();
+    await _prefs.setStringList(AppConstants.keySearchHistory, historyJson);
   }
 }

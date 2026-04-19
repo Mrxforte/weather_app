@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -41,141 +42,206 @@ class HomeScreen extends StatelessWidget {
           )
         : null;
 
+    final content = weather.isLoading && current == null
+        ? const WeatherShimmerCard()
+        : weather.errorMessage != null && current == null
+        ? _ErrorView(
+            message: localizedError(S.of(context)!, weather.errorMessage!),
+            onRetry: () => weather.refresh(),
+          )
+        : RefreshIndicator(
+            onRefresh: () => weather.refresh(),
+            color: Colors.white,
+            backgroundColor: Colors.white24,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                // App bar: drawer icon + search
+                SliverAppBar(
+                  expandedHeight: 0,
+                  floating: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(
+                      Icons.dashboard_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => context.push(AppRoutes.drawer),
+                  ),
+                  actions: [
+                    // Favorite toggle
+                    if (current != null)
+                      IconButton(
+                        icon: Icon(
+                          settings.isFavorite(
+                                CityEntity(
+                                  name: current.cityName,
+                                  country: current.country,
+                                  lat: current.lat,
+                                  lon: current.lon,
+                                ),
+                              )
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          final city = CityEntity(
+                            name: current.cityName,
+                            country: current.country,
+                            lat: current.lat,
+                            lon: current.lon,
+                          );
+                          settings.toggleFavorite(city);
+                        },
+                      ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => context.go(AppRoutes.search),
+                    ),
+                  ],
+                ),
+
+                if (current != null) ...[
+                  SliverToBoxAdapter(
+                    child: _SelectedCityForecastStrip(
+                      weather: current,
+                      isFahrenheit: settings.isFahrenheit,
+                    ),
+                  ),
+
+                  // Big temperature display
+                  SliverToBoxAdapter(
+                    child: _CurrentWeatherHeader(
+                      weather: current,
+                      isFahrenheit: settings.isFahrenheit,
+                      isNight: isNight,
+                    ),
+                  ),
+
+                  // Quick info row
+                  SliverToBoxAdapter(
+                    child: _QuickInfoRow(
+                      weather: current,
+                      isFahrenheit: settings.isFahrenheit,
+                      isMph: settings.isMph,
+                    ),
+                  ),
+
+                  // Hourly forecast
+                  if (weather.forecast != null)
+                    SliverToBoxAdapter(
+                      child: HourlyForecastRow(
+                        forecasts: weather.forecast!.forecasts.take(8).toList(),
+                        isFahrenheit: settings.isFahrenheit,
+                        sunrise: weather.forecast!.sunrise,
+                        sunset: weather.forecast!.sunset,
+                      ),
+                    ),
+
+                  // Daily forecast
+                  if (weather.forecast != null)
+                    SliverToBoxAdapter(
+                      child: DailyForecastCard(
+                        forecastList: weather.forecast!,
+                        isFahrenheit: settings.isFahrenheit,
+                        onTap: () => context.go(AppRoutes.forecast),
+                      ),
+                    ),
+
+                  // Air quality card
+                  if (weather.airQuality != null)
+                    SliverToBoxAdapter(
+                      child: _AirQualityCard(
+                        aqi: weather.airQuality!.aqi,
+                        onTap: () => context.go(AppRoutes.airQuality),
+                      ),
+                    ),
+
+                  // Last updated
+                  SliverToBoxAdapter(
+                    child: _LastUpdatedText(lastUpdated: weather.lastUpdated),
+                  ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                ],
+              ],
+            ),
+          );
+
     return WeatherBackground(
       colors: gradient,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: weather.isLoading && current == null
-            ? const WeatherShimmerCard()
-            : weather.errorMessage != null && current == null
-            ? _ErrorView(
-                message: localizedError(S.of(context)!, weather.errorMessage!),
-                onRetry: () => weather.refresh(),
-              )
-            : RefreshIndicator(
-                onRefresh: () => weather.refresh(),
-                color: Colors.white,
-                backgroundColor: Colors.white24,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (current != null)
+              IgnorePointer(
+                child: Opacity(
+                  opacity: 0.18,
+                  child: CachedNetworkImage(
+                    imageUrl: _cityImageUrl(current.cityName),
+                    fit: BoxFit.cover,
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
                   ),
-                  slivers: [
-                    // App bar: drawer icon + search
-                    SliverAppBar(
-                      expandedHeight: 0,
-                      floating: true,
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      leading: IconButton(
-                        icon: const Icon(
-                          Icons.dashboard_rounded,
-                          color: Colors.white,
-                        ),
-                        onPressed: () => context.push(AppRoutes.drawer),
-                      ),
-                      actions: [
-                        // Favorite toggle
-                        if (current != null)
-                          IconButton(
-                            icon: Icon(
-                              settings.isFavorite(
-                                    CityEntity(
-                                      name: current.cityName,
-                                      country: current.country,
-                                      lat: current.lat,
-                                      lon: current.lon,
-                                    ),
-                                  )
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              final city = CityEntity(
-                                name: current.cityName,
-                                country: current.country,
-                                lat: current.lat,
-                                lon: current.lon,
-                              );
-                              settings.toggleFavorite(city);
-                            },
-                          ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.search_rounded,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => context.go(AppRoutes.search),
-                        ),
-                      ],
-                    ),
-
-                    if (current != null) ...[
-                      // Big temperature display
-                      SliverToBoxAdapter(
-                        child: _CurrentWeatherHeader(
-                          weather: current,
-                          isFahrenheit: settings.isFahrenheit,
-                          isNight: isNight,
-                        ),
-                      ),
-
-                      // Quick info row
-                      SliverToBoxAdapter(
-                        child: _QuickInfoRow(
-                          weather: current,
-                          isFahrenheit: settings.isFahrenheit,
-                          isMph: settings.isMph,
-                        ),
-                      ),
-
-                      // Hourly forecast
-                      if (weather.forecast != null)
-                        SliverToBoxAdapter(
-                          child: HourlyForecastRow(
-                            forecasts: weather.forecast!.forecasts
-                                .take(8)
-                                .toList(),
-                            isFahrenheit: settings.isFahrenheit,
-                            sunrise: weather.forecast!.sunrise,
-                            sunset: weather.forecast!.sunset,
-                          ),
-                        ),
-
-                      // Daily forecast
-                      if (weather.forecast != null)
-                        SliverToBoxAdapter(
-                          child: DailyForecastCard(
-                            forecastList: weather.forecast!,
-                            isFahrenheit: settings.isFahrenheit,
-                            onTap: () => context.go(AppRoutes.forecast),
-                          ),
-                        ),
-
-                      // Air quality card
-                      if (weather.airQuality != null)
-                        SliverToBoxAdapter(
-                          child: _AirQualityCard(
-                            aqi: weather.airQuality!.aqi,
-                            onTap: () => context.go(AppRoutes.airQuality),
-                          ),
-                        ),
-
-                      // Last updated
-                      SliverToBoxAdapter(
-                        child: _LastUpdatedText(
-                          lastUpdated: weather.lastUpdated,
-                        ),
-                      ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                    ],
-                  ],
                 ),
               ),
+            content,
+          ],
+        ),
       ),
     );
+  }
+}
+
+String _cityImageUrl(String cityName) {
+  final q = Uri.encodeComponent('$cityName skyline weather');
+  return 'https://source.unsplash.com/1600x2400/?$q';
+}
+
+class _SelectedCityForecastStrip extends StatelessWidget {
+  final dynamic weather;
+  final bool isFahrenheit;
+
+  const _SelectedCityForecastStrip({
+    required this.weather,
+    required this.isFahrenheit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          const Icon(Icons.my_location_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${weather.cityName}, ${weather.country}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+            ),
+          ),
+          Text(
+            '${S.of(context)!.highLow}: ${WeatherUtils.formatTemperature(weather.tempMax, isFahrenheit: isFahrenheit)} / ${WeatherUtils.formatTemperature(weather.tempMin, isFahrenheit: isFahrenheit)}',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0);
   }
 }
 

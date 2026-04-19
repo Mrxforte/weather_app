@@ -53,6 +53,8 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
           title: Text(
             S.of(context)!.weatherDetails,
             style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
@@ -67,7 +69,9 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
                 color: Colors.white,
               ),
               onPressed: () => setState(() => _simpleView = !_simpleView),
-              tooltip: _simpleView ? 'Detail view' : 'Simple view',
+              tooltip: _simpleView
+                  ? S.of(context)!.detailView
+                  : S.of(context)!.simpleView,
             ),
           ],
         ),
@@ -169,7 +173,7 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
                               children: [
                                 WeatherInfoTile(
                                   icon: Icons.thermostat_rounded,
-                                  label: 'Feels Like',
+                                  label: S.of(context)!.feelsLike,
                                   value: WeatherUtils.formatTemperature(
                                     current.feelsLike,
                                     isFahrenheit: settings.isFahrenheit,
@@ -177,17 +181,17 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.water_drop_rounded,
-                                  label: 'Humidity',
+                                  label: S.of(context)!.humidity,
                                   value: '${current.humidity}%',
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.compress_rounded,
-                                  label: 'Pressure',
+                                  label: S.of(context)!.pressure,
                                   value: '${current.pressure} hPa',
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.air_rounded,
-                                  label: 'Wind',
+                                  label: S.of(context)!.wind,
                                   value: WeatherUtils.formatWindSpeed(
                                     current.windSpeed,
                                     isMph: settings.isMph,
@@ -195,27 +199,27 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.explore_rounded,
-                                  label: 'Direction',
+                                  label: S.of(context)!.direction,
                                   value: WeatherUtils.windDirectionFromDegrees(
                                     current.windDeg,
                                   ),
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.visibility_rounded,
-                                  label: 'Visibility',
+                                  label: S.of(context)!.visibility,
                                   value: WeatherUtils.formatVisibility(
                                     current.visibility,
                                   ),
                                 ),
                                 WeatherInfoTile(
                                   icon: Icons.cloud_rounded,
-                                  label: 'Clouds',
+                                  label: S.of(context)!.clouds,
                                   value: '${current.clouds}%',
                                 ),
                                 if (current.windGust != null)
                                   WeatherInfoTile(
                                     icon: Icons.storm_rounded,
-                                    label: 'Gusts',
+                                    label: S.of(context)!.gusts,
                                     value: WeatherUtils.formatWindSpeed(
                                       current.windGust!,
                                       isMph: settings.isMph,
@@ -223,7 +227,7 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
                                   ),
                                 WeatherInfoTile(
                                   icon: Icons.thermostat_auto_rounded,
-                                  label: 'High / Low',
+                                  label: S.of(context)!.highLow,
                                   value:
                                       '${WeatherUtils.formatTemperature(current.tempMax, isFahrenheit: settings.isFahrenheit)} / ${WeatherUtils.formatTemperature(current.tempMin, isFahrenheit: settings.isFahrenheit)}',
                                 ),

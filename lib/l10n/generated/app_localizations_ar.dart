@@ -30,7 +30,10 @@ class SAr extends S {
   String get about => 'حول التطبيق';
 
   @override
-  String get forecast => 'توقعات 3 أيام';
+  String get forecast => 'توقعات الأسبوع';
+
+  @override
+  String get share => 'مشاركة';
 
   @override
   String get airQuality => 'جودة الهواء';
@@ -280,11 +283,11 @@ class SAr extends S {
       'احصل على تحديثات طقس دقيقة لأي مدينة في العالم في الوقت الفعلي.';
 
   @override
-  String get onboardingTitle2 => 'توقعات 3 أيام';
+  String get onboardingTitle2 => 'توقعات أسبوعية';
 
   @override
   String get onboardingDesc2 =>
-      'خطط مسبقاً مع توقعات ساعية ويومية مفصلة لمدة تصل إلى 3 أيام.';
+      'خطط مسبقاً مع توقعات ساعية ويومية مفصلة لمدة تصل إلى 7 أيام.';
 
   @override
   String get onboardingTitle3 => 'احفظ مدنك';
@@ -304,14 +307,14 @@ class SAr extends S {
 
   @override
   String get aboutDesc =>
-      'WeatherNow يقدم لك بيانات الطقس لحظياً من جميع أنحاء العالم. تحقق من الأحوال الحالية، توقعات 3 أيام، مؤشرات جودة الهواء، والمزيد — في واجهة جميلة وسهلة الاستخدام.';
+      'WeatherNow يقدم لك بيانات الطقس لحظياً من جميع أنحاء العالم. تحقق من الأحوال الحالية، توقعات 7 أيام، مؤشرات جودة الهواء، والمزيد — في واجهة جميلة وسهلة الاستخدام.';
 
   @override
   String get dataSource => 'مصدر البيانات';
 
   @override
   String get dataSourceDesc =>
-      'بيانات الطقس مقدمة من WeatherAPI.com (الطبقة المجانية). يشمل الأحوال الحالية، توقعات ساعية لمدة 3 أيام، بيانات جودة الهواء، والبحث عن المدن.';
+      'بيانات الطقس مقدمة من WeatherAPI.com (الطبقة المجانية). يشمل الأحوال الحالية، توقعات ساعية لمدة 7 أيام، بيانات جودة الهواء، والبحث عن المدن.';
 
   @override
   String get builtWith => 'بُني باستخدام';
@@ -370,4 +373,74 @@ class SAr extends S {
 
   @override
   String get coordinates => 'الإحداثيات';
+
+  @override
+  String get undo => 'تراجع';
+
+  @override
+  String favoriteRemoved(String city) {
+    return 'تمت إزالة $city';
+  }
+
+  @override
+  String get listView => 'عرض القائمة';
+
+  @override
+  String get chartView => 'عرض الرسم';
+
+  @override
+  String get compact => 'مضغوط';
+
+  @override
+  String get detailView => 'عرض تفصيلي';
+
+  @override
+  String get simpleView => 'عرض بسيط';
+
+  @override
+  String get baseLayer => 'أساس';
+
+  @override
+  String get centerOnCity => 'التمركز على المدينة';
+
+  @override
+  String get aqiGoodDescription =>
+      'جودة الهواء ممتازة. مثالية للأنشطة الخارجية.';
+
+  @override
+  String get aqiFairDescription =>
+      'جودة الهواء مقبولة. يجب على الأشخاص الحساسين توخي الحذر.';
+
+  @override
+  String get aqiModerateDescription =>
+      'جودة الهواء متوسطة. يُفضل تقليل الأنشطة الخارجية.';
+
+  @override
+  String get aqiPoorDescription =>
+      'جودة الهواء سيئة. قلل التعرض الطويل في الخارج.';
+
+  @override
+  String get aqiVeryPoorDescription =>
+      'جودة الهواء سيئة جدا. تجنب الأنشطة الخارجية إن أمكن.';
+
+  @override
+  String get celsiusShort => '°م';
+
+  @override
+  String get fahrenheitShort => '°ف';
+
+  @override
+  String get kmhShort => 'كم/س';
+
+  @override
+  String get mphShort => 'ميل/س';
+
+  @override
+  String get weatherCompanion => 'رفيقك للطقس';
+
+  @override
+  String get recentSearches => 'عمليات البحث الأخيرة';
+
+  @override
+  String get clearHistory => 'مسح';
 }

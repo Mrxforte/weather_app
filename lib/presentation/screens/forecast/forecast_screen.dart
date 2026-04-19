@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -20,6 +21,39 @@ class ForecastScreen extends StatefulWidget {
 
 class _ForecastScreenState extends State<ForecastScreen> {
   bool _showChart = true;
+  bool _showDetailed = false;
+
+  void _shareForecast(BuildContext context) {
+    final weather = context.read<WeatherProvider>();
+    final settings = context.read<SettingsProvider>();
+    final forecast = weather.forecast;
+    if (forecast == null) return;
+
+    final dailyMap = forecast.groupedByDay;
+    final lines = <String>[
+      '${forecast.cityName}, ${forecast.country}',
+      S.of(context)!.forecast,
+    ];
+
+    for (final entry in dailyMap.entries.take(7)) {
+      final date = DateTime.parse(entry.key);
+      final dayForecasts = entry.value;
+      double hi = double.negativeInfinity;
+      double lo = double.infinity;
+      for (final f in dayForecasts) {
+        if (f.tempMax > hi) hi = f.tempMax;
+        if (f.tempMin < lo) lo = f.tempMin;
+      }
+
+      lines.add(
+        '${AppDateUtils.formatDate(date)}: '
+        '${WeatherUtils.formatTemperature(hi, isFahrenheit: settings.isFahrenheit)} / '
+        '${WeatherUtils.formatTemperature(lo, isFahrenheit: settings.isFahrenheit)}',
+      );
+    }
+
+    Share.share(lines.join('\n'));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,8 +122,18 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 title: Text(
                   S.of(context)!.forecast,
                   style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.ios_share_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => _shareForecast(context),
+                    tooltip: S.of(context)!.share,
+                  ),
                   // Toggle chart / list view
                   IconButton(
                     icon: Icon(
@@ -99,9 +143,38 @@ class _ForecastScreenState extends State<ForecastScreen> {
                       color: Colors.white,
                     ),
                     onPressed: () => setState(() => _showChart = !_showChart),
-                    tooltip: _showChart ? 'List view' : 'Chart view',
+                    tooltip: _showChart
+                        ? S.of(context)!.listView
+                        : S.of(context)!.chartView,
                   ),
                 ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(44),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _ViewChip(
+                            icon: Icons.view_stream_rounded,
+                            label: S.of(context)!.details,
+                            selected: _showDetailed,
+                            onTap: () => setState(() => _showDetailed = true),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ViewChip(
+                            icon: Icons.short_text_rounded,
+                            label: S.of(context)!.compact,
+                            selected: !_showDetailed,
+                            onTap: () => setState(() => _showDetailed = false),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
 
               // Temperature chart
@@ -157,79 +230,100 @@ class _ForecastScreenState extends State<ForecastScreen> {
                             const SizedBox(height: 12),
                             const Divider(color: Colors.white12, height: 1),
                             const SizedBox(height: 8),
-                            ...dayForecasts.map((f) {
-                              final time = AppDateUtils.formatTime(
-                                AppDateUtils.fromUnixTimestamp(f.timestamp),
-                              );
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 64,
-                                      child: Text(
-                                        time,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white60,
-                                        ),
-                                      ),
+                            ...(_showDetailed
+                                    ? dayForecasts
+                                    : dayForecasts
+                                          .asMap()
+                                          .entries
+                                          .where((e) => e.key % 3 == 0)
+                                          .map((e) => e.value))
+                                .map((f) {
+                                  final time = AppDateUtils.formatTime(
+                                    AppDateUtils.fromUnixTimestamp(f.timestamp),
+                                  );
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
                                     ),
-                                    Icon(
-                                      WeatherUtils.getWeatherIcon(
-                                        f.conditionCode,
-                                      ),
-                                      size: 20,
-                                      color: Colors.white70,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        f.conditionMain,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white60,
+                                    child: Row(
+                                      children: [
+                                        SizedBox(
+                                          width: _showDetailed ? 64 : 54,
+                                          child: Text(
+                                            time,
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: Colors.white60,
+                                                  fontSize: _showDetailed
+                                                      ? 12
+                                                      : 11,
+                                                ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    if (f.pop != null && f.pop! > 0)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8,
+                                        Icon(
+                                          WeatherUtils.getWeatherIcon(
+                                            f.conditionCode,
+                                          ),
+                                          size: _showDetailed ? 20 : 18,
+                                          color: Colors.white70,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.water_drop_rounded,
-                                              size: 12,
-                                              color: Colors.lightBlueAccent,
-                                            ),
-                                            const SizedBox(width: 2),
-                                            Text(
-                                              '${(f.pop! * 100).round()}%',
-                                              style: AppTextStyles.labelSmall
+                                        SizedBox(width: _showDetailed ? 12 : 8),
+                                        if (_showDetailed)
+                                          Expanded(
+                                            child: Text(
+                                              f.conditionMain,
+                                              style: AppTextStyles.bodySmall
                                                   .copyWith(
-                                                    color:
-                                                        Colors.lightBlueAccent,
+                                                    color: Colors.white60,
                                                   ),
                                             ),
-                                          ],
+                                          )
+                                        else
+                                          const Spacer(),
+                                        if (f.pop != null && f.pop! > 0)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              right: _showDetailed ? 8 : 6,
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.water_drop_rounded,
+                                                  size: 11,
+                                                  color: Colors.lightBlueAccent,
+                                                ),
+                                                const SizedBox(width: 2),
+                                                Text(
+                                                  '${(f.pop! * 100).round()}%',
+                                                  style: AppTextStyles
+                                                      .labelSmall
+                                                      .copyWith(
+                                                        color: Colors
+                                                            .lightBlueAccent,
+                                                        fontSize: 10,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        Text(
+                                          WeatherUtils.formatTemperature(
+                                            f.temp,
+                                            isFahrenheit: settings.isFahrenheit,
+                                          ),
+                                          style: AppTextStyles.titleMedium
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontSize: _showDetailed
+                                                    ? 16
+                                                    : 14,
+                                              ),
                                         ),
-                                      ),
-                                    Text(
-                                      WeatherUtils.formatTemperature(
-                                        f.temp,
-                                        isFahrenheit: settings.isFahrenheit,
-                                      ),
-                                      style: AppTextStyles.titleMedium.copyWith(
-                                        color: Colors.white,
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                            }),
+                                  );
+                                }),
                           ],
                         ),
                       )
@@ -242,6 +336,58 @@ class _ForecastScreenState extends State<ForecastScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ViewChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ViewChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.22)
+              : Colors.white.withValues(alpha: 0.09),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? Colors.white.withValues(alpha: 0.45)
+                : Colors.white.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: Colors.white,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

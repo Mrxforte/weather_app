@@ -30,7 +30,10 @@ class SEn extends S {
   String get about => 'About';
 
   @override
-  String get forecast => '3-Day Forecast';
+  String get forecast => 'Weekly Forecast';
+
+  @override
+  String get share => 'Share';
 
   @override
   String get airQuality => 'Air Quality';
@@ -281,11 +284,11 @@ class SEn extends S {
       'Get accurate weather updates for any city in the world with real-time data.';
 
   @override
-  String get onboardingTitle2 => '3-Day Forecast';
+  String get onboardingTitle2 => 'Weekly Forecast';
 
   @override
   String get onboardingDesc2 =>
-      'Plan ahead with detailed hourly and daily forecasts up to 3 days.';
+      'Plan ahead with detailed hourly and daily forecasts up to 7 days.';
 
   @override
   String get onboardingTitle3 => 'Save Your Cities';
@@ -305,14 +308,14 @@ class SEn extends S {
 
   @override
   String get aboutDesc =>
-      'WeatherNow brings you real-time weather data from around the world. Check current conditions, 3-day forecasts, air quality indexes, and more — all in a beautiful, easy-to-use interface.';
+      'WeatherNow brings you real-time weather data from around the world. Check current conditions, 7-day forecasts, air quality indexes, and more — all in a beautiful, easy-to-use interface.';
 
   @override
   String get dataSource => 'Data Source';
 
   @override
   String get dataSourceDesc =>
-      'Weather data provided by WeatherAPI.com (free tier). This includes current conditions, 3-day hourly forecasts, air quality data, and city search.';
+      'Weather data provided by WeatherAPI.com (free tier). This includes current conditions, 7-day hourly forecasts, air quality data, and city search.';
 
   @override
   String get builtWith => 'Built With';
@@ -372,4 +375,74 @@ class SEn extends S {
 
   @override
   String get coordinates => 'Coordinates';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String favoriteRemoved(String city) {
+    return '$city removed';
+  }
+
+  @override
+  String get listView => 'List view';
+
+  @override
+  String get chartView => 'Chart view';
+
+  @override
+  String get compact => 'Compact';
+
+  @override
+  String get detailView => 'Detail view';
+
+  @override
+  String get simpleView => 'Simple view';
+
+  @override
+  String get baseLayer => 'Base';
+
+  @override
+  String get centerOnCity => 'Center on city';
+
+  @override
+  String get aqiGoodDescription =>
+      'Air quality is excellent. Perfect for outdoor activities.';
+
+  @override
+  String get aqiFairDescription =>
+      'Air quality is acceptable. Sensitive individuals should be cautious.';
+
+  @override
+  String get aqiModerateDescription =>
+      'Moderate air quality. Consider reducing outdoor activities.';
+
+  @override
+  String get aqiPoorDescription =>
+      'Poor air quality. Limit prolonged outdoor exposure.';
+
+  @override
+  String get aqiVeryPoorDescription =>
+      'Very poor air quality. Avoid outdoor activities if possible.';
+
+  @override
+  String get celsiusShort => '°C';
+
+  @override
+  String get fahrenheitShort => '°F';
+
+  @override
+  String get kmhShort => 'km/h';
+
+  @override
+  String get mphShort => 'mph';
+
+  @override
+  String get weatherCompanion => 'Your weather companion';
+
+  @override
+  String get recentSearches => 'Recent searches';
+
+  @override
+  String get clearHistory => 'Clear';
 }

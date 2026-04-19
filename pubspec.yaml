@@ -58,6 +58,9 @@ dependencies:
   # Performance
   flutter_displaymode: ^0.6.0
 
+  # Share
+  share_plus: ^10.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

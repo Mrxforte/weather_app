@@ -23,6 +23,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _currentPage = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final settings = context.read<SettingsProvider>();
+      if (settings.onboardingDone) {
+        context.go(AppRoutes.home);
+      }
+    });
+  }
+
   List<_OnboardingPage> _buildPages(BuildContext context) {
     final l10n = S.of(context)!;
     return [

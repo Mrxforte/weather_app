@@ -152,8 +152,14 @@ abstract class S {
   /// No description provided for @forecast.
   ///
   /// In en, this message translates to:
-  /// **'3-Day Forecast'**
+  /// **'Weekly Forecast'**
   String get forecast;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
 
   /// No description provided for @airQuality.
   ///
@@ -638,13 +644,13 @@ abstract class S {
   /// No description provided for @onboardingTitle2.
   ///
   /// In en, this message translates to:
-  /// **'3-Day Forecast'**
+  /// **'Weekly Forecast'**
   String get onboardingTitle2;
 
   /// No description provided for @onboardingDesc2.
   ///
   /// In en, this message translates to:
-  /// **'Plan ahead with detailed hourly and daily forecasts up to 3 days.'**
+  /// **'Plan ahead with detailed hourly and daily forecasts up to 7 days.'**
   String get onboardingDesc2;
 
   /// No description provided for @onboardingTitle3.
@@ -680,7 +686,7 @@ abstract class S {
   /// No description provided for @aboutDesc.
   ///
   /// In en, this message translates to:
-  /// **'WeatherNow brings you real-time weather data from around the world. Check current conditions, 3-day forecasts, air quality indexes, and more — all in a beautiful, easy-to-use interface.'**
+  /// **'WeatherNow brings you real-time weather data from around the world. Check current conditions, 7-day forecasts, air quality indexes, and more — all in a beautiful, easy-to-use interface.'**
   String get aboutDesc;
 
   /// No description provided for @dataSource.
@@ -692,7 +698,7 @@ abstract class S {
   /// No description provided for @dataSourceDesc.
   ///
   /// In en, this message translates to:
-  /// **'Weather data provided by WeatherAPI.com (free tier). This includes current conditions, 3-day hourly forecasts, air quality data, and city search.'**
+  /// **'Weather data provided by WeatherAPI.com (free tier). This includes current conditions, 7-day hourly forecasts, air quality data, and city search.'**
   String get dataSourceDesc;
 
   /// No description provided for @builtWith.
@@ -796,6 +802,132 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Coordinates'**
   String get coordinates;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @favoriteRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{city} removed'**
+  String favoriteRemoved(String city);
+
+  /// No description provided for @listView.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get listView;
+
+  /// No description provided for @chartView.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart view'**
+  String get chartView;
+
+  /// No description provided for @compact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get compact;
+
+  /// No description provided for @detailView.
+  ///
+  /// In en, this message translates to:
+  /// **'Detail view'**
+  String get detailView;
+
+  /// No description provided for @simpleView.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple view'**
+  String get simpleView;
+
+  /// No description provided for @baseLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get baseLayer;
+
+  /// No description provided for @centerOnCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Center on city'**
+  String get centerOnCity;
+
+  /// No description provided for @aqiGoodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Air quality is excellent. Perfect for outdoor activities.'**
+  String get aqiGoodDescription;
+
+  /// No description provided for @aqiFairDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Air quality is acceptable. Sensitive individuals should be cautious.'**
+  String get aqiFairDescription;
+
+  /// No description provided for @aqiModerateDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate air quality. Consider reducing outdoor activities.'**
+  String get aqiModerateDescription;
+
+  /// No description provided for @aqiPoorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor air quality. Limit prolonged outdoor exposure.'**
+  String get aqiPoorDescription;
+
+  /// No description provided for @aqiVeryPoorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Very poor air quality. Avoid outdoor activities if possible.'**
+  String get aqiVeryPoorDescription;
+
+  /// No description provided for @celsiusShort.
+  ///
+  /// In en, this message translates to:
+  /// **'°C'**
+  String get celsiusShort;
+
+  /// No description provided for @fahrenheitShort.
+  ///
+  /// In en, this message translates to:
+  /// **'°F'**
+  String get fahrenheitShort;
+
+  /// No description provided for @kmhShort.
+  ///
+  /// In en, this message translates to:
+  /// **'km/h'**
+  String get kmhShort;
+
+  /// No description provided for @mphShort.
+  ///
+  /// In en, this message translates to:
+  /// **'mph'**
+  String get mphShort;
+
+  /// No description provided for @weatherCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weather companion'**
+  String get weatherCompanion;
+
+  /// No description provided for @recentSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent searches'**
+  String get recentSearches;
+
+  /// No description provided for @clearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearHistory;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

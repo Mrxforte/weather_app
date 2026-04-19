@@ -20,22 +20,17 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     Widget card = Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.7),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.3),
-        ),
+        color: Colors.white.withValues(alpha: 0.1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.14),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -46,7 +41,17 @@ class GlassCard extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: padding ?? const EdgeInsets.all(16),
-            child: child,
+            child: IconTheme.merge(
+              data: const IconThemeData(color: Colors.white),
+              child: DefaultTextStyle.merge(
+                style: const TextStyle(color: Colors.white),
+                child: ListTileTheme.merge(
+                  iconColor: Colors.white,
+                  textColor: Colors.white,
+                  child: child,
+                ),
+              ),
+            ),
           ),
         ),
       ),

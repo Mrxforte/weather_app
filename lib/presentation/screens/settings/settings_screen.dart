@@ -22,7 +22,11 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settings),
+        title: Text(
+          l10n.settings,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -42,9 +46,15 @@ class SettingsScreen extends StatelessWidget {
                         ? l10n.fahrenheit
                         : l10n.celsius,
                     trailing: SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(value: false, label: Text('°C')),
-                        ButtonSegment(value: true, label: Text('°F')),
+                      segments: [
+                        ButtonSegment(
+                          value: false,
+                          label: Text(l10n.celsiusShort),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text(l10n.fahrenheitShort),
+                        ),
                       ],
                       selected: {settings.isFahrenheit},
                       onSelectionChanged: (val) =>
@@ -60,9 +70,9 @@ class SettingsScreen extends StatelessWidget {
                     title: l10n.windSpeed,
                     subtitle: settings.isMph ? l10n.mph : l10n.kmh,
                     trailing: SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(value: false, label: Text('km/h')),
-                        ButtonSegment(value: true, label: Text('mph')),
+                      segments: [
+                        ButtonSegment(value: false, label: Text(l10n.kmhShort)),
+                        ButtonSegment(value: true, label: Text(l10n.mphShort)),
                       ],
                       selected: {settings.isMph},
                       onSelectionChanged: (val) =>
@@ -236,7 +246,12 @@ class SettingsScreen extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary,
                         )
                       : const Icon(Icons.circle_outlined, color: Colors.grey),
-                  title: Text(name, style: AppTextStyles.titleMedium),
+                  title: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.titleMedium,
+                  ),
                   onTap: () {
                     settings.setLanguage(code);
                     Navigator.pop(ctx);
@@ -283,8 +298,18 @@ class _SettingsTile extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
         ),
       ),
-      title: Text(title, style: AppTextStyles.titleMedium),
-      subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.titleMedium,
+      ),
+      subtitle: Text(
+        subtitle,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.bodySmall,
+      ),
       trailing: trailing,
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),

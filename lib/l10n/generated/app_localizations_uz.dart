@@ -30,7 +30,10 @@ class SUz extends S {
   String get about => 'Ilova haqida';
 
   @override
-  String get forecast => '3 kunlik prognoz';
+  String get forecast => 'Haftalik prognoz';
+
+  @override
+  String get share => 'Ulashish';
 
   @override
   String get airQuality => 'Havo sifati';
@@ -282,11 +285,11 @@ class SUz extends S {
       'Dunyoning istalgan shahri uchun aniq ob-havo yangilanishlarini real vaqtda oling.';
 
   @override
-  String get onboardingTitle2 => '3 kunlik prognoz';
+  String get onboardingTitle2 => 'Haftalik prognoz';
 
   @override
   String get onboardingDesc2 =>
-      '3 kungacha bo\'lgan batafsil soatlik va kunlik prognozlar bilan rejalashtiring.';
+      '7 kungacha bo\'lgan batafsil soatlik va kunlik prognozlar bilan rejalashtiring.';
 
   @override
   String get onboardingTitle3 => 'Shaharlarni saqlang';
@@ -306,14 +309,14 @@ class SUz extends S {
 
   @override
   String get aboutDesc =>
-      'WeatherNow butun dunyo bo\'ylab real vaqt ob-havo ma\'lumotlarini taqdim etadi. Joriy sharoitlar, 3 kunlik prognozlar, havo sifati indekslari va boshqalar — chiroyli va qulay interfeysda.';
+      'WeatherNow butun dunyo bo\'ylab real vaqt ob-havo ma\'lumotlarini taqdim etadi. Joriy sharoitlar, 7 kunlik prognozlar, havo sifati indekslari va boshqalar — chiroyli va qulay interfeysda.';
 
   @override
   String get dataSource => 'Ma\'lumot manbasi';
 
   @override
   String get dataSourceDesc =>
-      'Ob-havo ma\'lumotlari WeatherAPI.com (bepul tarif) tomonidan taqdim etilgan. Joriy sharoitlar, 3 kunlik soatlik prognozlar, havo sifati ma\'lumotlari va shahar qidiruvini o\'z ichiga oladi.';
+      'Ob-havo ma\'lumotlari WeatherAPI.com (bepul tarif) tomonidan taqdim etilgan. Joriy sharoitlar, 7 kunlik soatlik prognozlar, havo sifati ma\'lumotlari va shahar qidiruvini o\'z ichiga oladi.';
 
   @override
   String get builtWith => 'Yaratilgan';
@@ -372,4 +375,74 @@ class SUz extends S {
 
   @override
   String get coordinates => 'Koordinatalar';
+
+  @override
+  String get undo => 'Bekor qilish';
+
+  @override
+  String favoriteRemoved(String city) {
+    return '$city o\'chirildi';
+  }
+
+  @override
+  String get listView => 'Ro\'yxat ko\'rinishi';
+
+  @override
+  String get chartView => 'Grafik ko\'rinishi';
+
+  @override
+  String get compact => 'Ixcham';
+
+  @override
+  String get detailView => 'Batafsil ko\'rinish';
+
+  @override
+  String get simpleView => 'Oddiy ko\'rinish';
+
+  @override
+  String get baseLayer => 'Asosiy';
+
+  @override
+  String get centerOnCity => 'Shaharga markazlash';
+
+  @override
+  String get aqiGoodDescription =>
+      'Havo sifati a\'lo. Ochiq havodagi faoliyat uchun juda yaxshi.';
+
+  @override
+  String get aqiFairDescription =>
+      'Havo sifati maqbul. Sezgir odamlar ehtiyot bo\'lishi kerak.';
+
+  @override
+  String get aqiModerateDescription =>
+      'Havo sifati o\'rtacha. Ochiq havodagi faoliyatni kamaytiring.';
+
+  @override
+  String get aqiPoorDescription =>
+      'Havo sifati yomon. Uzoq vaqt tashqarida qolishni cheklang.';
+
+  @override
+  String get aqiVeryPoorDescription =>
+      'Havo sifati juda yomon. Imkon bo\'lsa, tashqariga chiqishni cheklang.';
+
+  @override
+  String get celsiusShort => '°C';
+
+  @override
+  String get fahrenheitShort => '°F';
+
+  @override
+  String get kmhShort => 'km/soat';
+
+  @override
+  String get mphShort => 'mil/soat';
+
+  @override
+  String get weatherCompanion => 'Ob-havo hamrohingiz';
+
+  @override
+  String get recentSearches => 'So\'nggi qidiruvlar';
+
+  @override
+  String get clearHistory => 'Tozalash';
 }

@@ -5,6 +5,7 @@ import 'package:weather_app/l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/date_utils.dart';
 import '../../../core/utils/weather_utils.dart';
 import '../../providers/weather_provider.dart';
 import '../../widgets/glass_card.dart';
@@ -17,30 +18,55 @@ class AirQualityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final weather = context.watch<WeatherProvider>();
     final aq = weather.airQuality;
+    final current = weather.currentWeather;
+    final forecast = weather.forecast;
+
+    final isNight = current != null && forecast != null
+        ? AppDateUtils.isNight(
+            current.timestamp,
+            sunrise: forecast.sunrise,
+            sunset: forecast.sunset,
+          )
+        : false;
+    final gradient = current != null
+        ? WeatherUtils.getWeatherGradient(
+            current.conditionCode,
+            isNight: isNight,
+          )
+        : null;
 
     if (aq == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.eco_rounded, size: 64, color: Colors.grey.shade300),
-              const SizedBox(height: 16),
-              Text(
-                S.of(context)!.noWeatherData,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: Colors.grey.shade400,
+      return WeatherBackground(
+        colors: gradient,
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.eco_rounded,
+                  size: 64,
+                  color: Colors.white.withValues(alpha: 0.75),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  S.of(context)!.noWeatherData,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    final (label, color) = WeatherUtils.getAqiInfo(aq.aqi);
+    final (label, _) = WeatherUtils.getAqiInfo(aq.aqi);
 
     return WeatherBackground(
+      colors: gradient,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: RefreshIndicator(
@@ -76,8 +102,11 @@ class AirQualityScreen extends StatelessWidget {
                         height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: color.withValues(alpha: 0.2),
-                          border: Border.all(color: color, width: 3),
+                          color: Colors.white.withValues(alpha: 0.14),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.45),
+                            width: 2.5,
+                          ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -92,8 +121,17 @@ class AirQualityScreen extends StatelessWidget {
                             Text(
                               label,
                               style: AppTextStyles.titleMedium.copyWith(
-                                color: color,
+                                color: Colors.white70,
                                 fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: Colors.white70,
+                                shape: BoxShape.circle,
                               ),
                             ),
                           ],
@@ -110,7 +148,7 @@ class AirQualityScreen extends StatelessWidget {
 
                   const SizedBox(height: 12),
                   Text(
-                    _getAqiDescription(aq.aqi),
+                    _getAqiDescription(context, aq.aqi),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: Colors.white70,
@@ -202,7 +240,7 @@ class AirQualityScreen extends StatelessWidget {
                                               labels[idx],
                                               style: AppTextStyles.labelSmall
                                                   .copyWith(
-                                                    color: Colors.white54,
+                                                    color: Colors.white70,
                                                     fontSize: 9,
                                                   ),
                                             ),
@@ -214,12 +252,12 @@ class AirQualityScreen extends StatelessWidget {
                                   borderData: FlBorderData(show: false),
                                   gridData: const FlGridData(show: false),
                                   barGroups: [
-                                    _bar(0, aq.pm25, color),
-                                    _bar(1, aq.pm10, color),
-                                    _bar(2, aq.o3, color),
-                                    _bar(3, aq.no2, color),
-                                    _bar(4, aq.so2, color),
-                                    _bar(5, aq.co / 10, color),
+                                    _bar(0, aq.pm25, Colors.white70),
+                                    _bar(1, aq.pm10, Colors.white70),
+                                    _bar(2, aq.o3, Colors.white70),
+                                    _bar(3, aq.no2, Colors.white70),
+                                    _bar(4, aq.so2, Colors.white70),
+                                    _bar(5, aq.co / 10, Colors.white70),
                                   ],
                                 ),
                               ),
@@ -289,7 +327,7 @@ class AirQualityScreen extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.health_and_safety_rounded,
-                                  color: color,
+                                  color: Colors.white,
                                   size: 24,
                                 ),
                                 const SizedBox(width: 8),
@@ -303,7 +341,7 @@ class AirQualityScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              _getHealthAdvice(aq.aqi),
+                              _getHealthAdvice(context, aq.aqi),
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: Colors.white70,
                                 height: 1.5,
@@ -332,7 +370,7 @@ class AirQualityScreen extends StatelessWidget {
       barRods: [
         BarChartRodData(
           toY: y,
-          color: color.withValues(alpha: 0.7),
+          color: color.withValues(alpha: 0.9),
           width: 18,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
         ),
@@ -340,31 +378,27 @@ class AirQualityScreen extends StatelessWidget {
     );
   }
 
-  String _getAqiDescription(int aqi) {
+  String _getAqiDescription(BuildContext context, int aqi) {
+    final l10n = S.of(context)!;
     return switch (aqi) {
-      1 => 'Air quality is excellent. Perfect for outdoor activities.',
-      2 =>
-        'Air quality is acceptable. Sensitive individuals should be cautious.',
-      3 => 'Moderate air quality. Consider reducing outdoor activities.',
-      4 => 'Poor air quality. Limit prolonged outdoor exposure.',
-      5 => 'Very poor air quality. Avoid outdoor activities if possible.',
-      _ => 'Air quality data unavailable.',
+      1 => l10n.aqiGoodDescription,
+      2 => l10n.aqiFairDescription,
+      3 => l10n.aqiModerateDescription,
+      4 => l10n.aqiPoorDescription,
+      5 => l10n.aqiVeryPoorDescription,
+      _ => l10n.unknown,
     };
   }
 
-  String _getHealthAdvice(int aqi) {
+  String _getHealthAdvice(BuildContext context, int aqi) {
+    final l10n = S.of(context)!;
     return switch (aqi) {
-      1 =>
-        'Enjoy your outdoor activities! Air quality poses no risk. Great conditions for exercise, walks, and spending time outside.',
-      2 =>
-        'Generally safe for most people. Those with respiratory issues may want to limit prolonged strenuous activity outdoors.',
-      3 =>
-        'Everyone may experience some discomfort. People with heart or lung conditions, older adults, and children should limit outdoor exertion.',
-      4 =>
-        'Health effects are possible for everyone. Sensitive groups may experience more serious effects. Stay indoors when possible.',
-      5 =>
-        'Health alert: everyone may experience serious health effects. Avoid all outdoor physical activity and keep windows closed.',
-      _ => 'No specific health advice available.',
+      1 => l10n.aqiGoodAdvice,
+      2 => l10n.aqiFairAdvice,
+      3 => l10n.aqiModerateAdvice,
+      4 => l10n.aqiPoorAdvice,
+      5 => l10n.aqiVeryPoorAdvice,
+      _ => l10n.unknown,
     };
   }
 }
@@ -390,7 +424,7 @@ class _PollutantRow extends StatelessWidget {
             width: 56,
             child: Text(
               name,
-              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70),
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
             ),
           ),
           Expanded(
@@ -398,7 +432,7 @@ class _PollutantRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: (value / 300).clamp(0.0, 1.0),
-                backgroundColor: Colors.white12,
+                backgroundColor: Colors.white24,
                 valueColor: AlwaysStoppedAnimation(_pollutantColor(value)),
                 minHeight: 6,
               ),
@@ -410,7 +444,7 @@ class _PollutantRow extends StatelessWidget {
             child: Text(
               '${value.toStringAsFixed(1)} $unit',
               textAlign: TextAlign.end,
-              style: AppTextStyles.bodySmall.copyWith(color: Colors.white60),
+              style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
             ),
           ),
         ],

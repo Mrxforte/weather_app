@@ -8,6 +8,7 @@ import 'core/di/service_locator.dart';
 import 'core/router/app_router.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
+import 'data/datasources/weather_api_service.dart';
 import 'presentation/providers/settings_provider.dart';
 import 'presentation/providers/weather_provider.dart';
 
@@ -55,6 +56,8 @@ class WeatherApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) {
+          // Sync API language with user preference
+          getIt<WeatherApiService>().setLanguage(settings.languageCode);
           return MaterialApp.router(
             key: ValueKey(settings.locale),
             title: 'WeatherNow',

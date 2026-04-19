@@ -16,7 +16,7 @@ class AboutScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.about),
+        title: Text(l10n.about, maxLines: 1, overflow: TextOverflow.ellipsis),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -152,29 +152,27 @@ class _InfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Colors.white.withValues(alpha: 0.1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              Icon(icon, size: 20, color: Colors.white),
               const SizedBox(width: 8),
-              Text(title, style: AppTextStyles.titleMedium),
+              Text(
+                title,
+                style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             content,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey.shade600,
+              color: Colors.white70,
               height: 1.5,
             ),
           ),

@@ -30,7 +30,10 @@ class SEs extends S {
   String get about => 'Acerca de';
 
   @override
-  String get forecast => 'Pronóstico de 3 días';
+  String get forecast => 'Pronóstico semanal';
+
+  @override
+  String get share => 'Compartir';
 
   @override
   String get airQuality => 'Calidad del aire';
@@ -281,11 +284,11 @@ class SEs extends S {
       'Obtén actualizaciones precisas del clima para cualquier ciudad del mundo en tiempo real.';
 
   @override
-  String get onboardingTitle2 => 'Pronóstico de 3 días';
+  String get onboardingTitle2 => 'Pronóstico semanal';
 
   @override
   String get onboardingDesc2 =>
-      'Planifica con anticipación con pronósticos detallados por hora y por día hasta 3 días.';
+      'Planifica con anticipación con pronósticos detallados por hora y por día hasta 7 días.';
 
   @override
   String get onboardingTitle3 => 'Guarda tus ciudades';
@@ -305,14 +308,14 @@ class SEs extends S {
 
   @override
   String get aboutDesc =>
-      'WeatherNow te trae datos meteorológicos en tiempo real de todo el mundo. Consulta las condiciones actuales, pronósticos de 3 días, índices de calidad del aire y más — todo en una interfaz hermosa y fácil de usar.';
+      'WeatherNow te trae datos meteorológicos en tiempo real de todo el mundo. Consulta las condiciones actuales, pronósticos de 7 días, índices de calidad del aire y más — todo en una interfaz hermosa y fácil de usar.';
 
   @override
   String get dataSource => 'Fuente de datos';
 
   @override
   String get dataSourceDesc =>
-      'Datos meteorológicos proporcionados por WeatherAPI.com (nivel gratuito). Incluye condiciones actuales, pronósticos horarios de 3 días, datos de calidad del aire y búsqueda de ciudades.';
+      'Datos meteorológicos proporcionados por WeatherAPI.com (nivel gratuito). Incluye condiciones actuales, pronósticos horarios de 7 días, datos de calidad del aire y búsqueda de ciudades.';
 
   @override
   String get builtWith => 'Construido con';
@@ -372,4 +375,74 @@ class SEs extends S {
 
   @override
   String get coordinates => 'Coordenadas';
+
+  @override
+  String get undo => 'Deshacer';
+
+  @override
+  String favoriteRemoved(String city) {
+    return '$city eliminada';
+  }
+
+  @override
+  String get listView => 'Vista de lista';
+
+  @override
+  String get chartView => 'Vista de gráfico';
+
+  @override
+  String get compact => 'Compacto';
+
+  @override
+  String get detailView => 'Vista detallada';
+
+  @override
+  String get simpleView => 'Vista simple';
+
+  @override
+  String get baseLayer => 'Base';
+
+  @override
+  String get centerOnCity => 'Centrar en la ciudad';
+
+  @override
+  String get aqiGoodDescription =>
+      'La calidad del aire es excelente. Perfecta para actividades al aire libre.';
+
+  @override
+  String get aqiFairDescription =>
+      'La calidad del aire es aceptable. Las personas sensibles deben tener precaución.';
+
+  @override
+  String get aqiModerateDescription =>
+      'Calidad del aire moderada. Considera reducir actividades al aire libre.';
+
+  @override
+  String get aqiPoorDescription =>
+      'Mala calidad del aire. Limita la exposición prolongada al aire libre.';
+
+  @override
+  String get aqiVeryPoorDescription =>
+      'Muy mala calidad del aire. Evita actividades al aire libre si es posible.';
+
+  @override
+  String get celsiusShort => '°C';
+
+  @override
+  String get fahrenheitShort => '°F';
+
+  @override
+  String get kmhShort => 'km/h';
+
+  @override
+  String get mphShort => 'mph';
+
+  @override
+  String get weatherCompanion => 'Tu compañero del clima';
+
+  @override
+  String get recentSearches => 'Búsquedas recientes';
+
+  @override
+  String get clearHistory => 'Limpiar';
 }
